@@ -197,6 +197,7 @@ export default {
 
 <style lang="scss">
 .page {
+  user-select: none;
   display: flex;
   justify-content: center;
   align-items: center;
