@@ -305,6 +305,22 @@ export default {
     outline: 4px solid yellow;
     z-index: 2;
   }
+}
 
+@media screen and (max-width: 992px) {
+  .page {
+    height: initial;
+    width: initial;
+    .container {
+      flex-direction: column;
+    }
+    .champ-container, .item-container {
+      max-width: 90vw;
+    }
+    .type-container, .origin-container {
+      margin: 50px;
+      max-height: initial;
+    }
+  }
 }
 </style>
