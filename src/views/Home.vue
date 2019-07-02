@@ -233,7 +233,7 @@ export default {
       flex-direction: column;
     }
     .selected-column {
-      outline: 2px solid black;
+      background-color: rgba(0,0,150, 0.5);
     }
     .item {
       width: 100%;
