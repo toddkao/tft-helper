@@ -16,9 +16,9 @@
         'grid-template-columns': `repeat(${itemWidth + 1}, 1fr)`}" >
         <div class="item-column" style="justify-content: flex-end">
           <img
-            v-for="item in items"
+            v-for="item in sortedItems"
             class="item"
-            :key="item.key"
+            :key="`y-axis-${item.key}`"
             :src="item.image"
             :class="{'selected-column': selected[item.name] === true }"
             @click="toggle(item.name)"
@@ -27,8 +27,8 @@
 
         <div
           class="item-column"
-          v-for="item in items"
-          :key="item.key"
+          v-for="item in sortedItems"
+          :key="`row-${item.key}`"
           :class="{'selected-column': selected[item.name] === true }"
         >
           <img
@@ -40,9 +40,9 @@
           <img
             class="advanced-item"
             :class="{'selected': selected[nextItem.name] === true }"
-            v-for="nextItem in item.buildsInto"
+            v-for="(nextItem, index) in item.buildsInto"
             :src="nextItem.image"
-            :key="nextItem.name"
+            :key="`adv-item-${nextItem.name}-${index}`"
             @click="toggle(nextItem.name)"
           />
         </div>
@@ -52,7 +52,7 @@
       <div class="type-container">
         <h1> Classes </h1>
         <div v-for="(amount, type) in potentialClasses" :key="type">
-          <span> {{ type }}: {{ amount }} </span>
+          <span> {{ type }} {{ amount }} </span>
           <span
             v-for="tier in classes[type.toLowerCase()].bonuses"
             :class="{'reached': amount >= tier.needed}"
@@ -65,7 +65,7 @@
       <div class="origin-container">
         <h1> Origins </h1>
         <div v-for="(amount, origin) in potentialOrigins" :key="origin">
-          <span> {{ origin }}: {{ amount }} </span>
+          <span> {{ origin }} {{ amount }} </span>
           <span
             v-for="tier in origins[origin.toLowerCase()].bonuses"
             :class="{'reached': amount >= tier.needed}"
@@ -143,6 +143,28 @@ export default {
       })
       return clone;
     },
+    sortedItems () {
+      const order = this.items.map(x => x.key)
+      console.log(order)
+      let sorted = this.items.map(item => {
+        let ordered = [];
+        order.forEach(orderItem => {
+          let itemName = item.key;
+          if (orderItem !== itemName) {
+            let advItem = item.buildsInto.find(x => x.from.includes(orderItem))
+            ordered.push(advItem);
+          } else {
+            let advItem = item.buildsInto.find(x => x.from.every((val) => val === orderItem))
+            ordered.push(advItem);
+          }
+        })
+        item.buildsInto = ordered;
+        return item;
+      })
+      console.log(sorted);
+      this.$forceUpdate();
+      return sorted;
+    }
   },
   methods: {
     toggle (key) {
@@ -175,6 +197,7 @@ export default {
           item.buildsInto = item.buildsInto.map(item => {
             return {
               name: item,
+              from: items[item].buildsFrom,
               image: `https://solomid-resources.s3.amazonaws.com/blitz/tft/items/${item}.png`,
             }
           })
