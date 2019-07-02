@@ -196,11 +196,6 @@ export default {
 </script>
 
 <style lang="scss">
-.container {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-}
 .page {
   display: flex;
   justify-content: center;
@@ -216,9 +211,6 @@ export default {
       width: 100%;
       height: auto;
       opacity: 0.5;
-      &.selected {
-        opacity: 1;
-      }
       &:hover {
         cursor: pointer;
         opacity: 1;
@@ -238,9 +230,6 @@ export default {
     .item {
       width: 100%;
       height: auto;
-      &.selected {
-        opacity: 1;
-      }
       &:hover {
         cursor: pointer;
         opacity: 1;
@@ -250,22 +239,34 @@ export default {
       width: 100%;
       height: auto;
       opacity: 0.5;
-      &.selected {
-        opacity: 1;
-      }
       &:hover {
         cursor: pointer;
         opacity: 1;
       }
     }
   }
+
   .type-container, .origin-container {
     margin: 50px;
     text-align: left;
   }
+
   .reached {
     font-weight: bold;
     color: rgb(13, 194, 13);
   }
+
+  .container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  .selected {
+    opacity: 1!important;
+    outline: 4px solid yellow;
+    z-index: 2;
+  }
+
 }
 </style>
