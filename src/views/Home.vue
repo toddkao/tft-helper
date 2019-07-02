@@ -231,6 +231,15 @@ export default {
 </script>
 
 <style lang="scss">
+@mixin desktopHover() {
+  @media screen and (min-width: 993px) {
+    &:hover {
+      cursor: pointer;
+      opacity: 1;
+    }
+  }
+}
+
 .page {
   user-select: none;
   display: flex;
@@ -247,10 +256,7 @@ export default {
       width: 100%;
       height: auto;
       opacity: 0.5;
-      &:hover {
-        cursor: pointer;
-        opacity: 1;
-      }
+      @include desktopHover;
     }
   }
   .item-container {
@@ -266,19 +272,13 @@ export default {
     .item {
       width: 100%;
       height: auto;
-      &:hover {
-        cursor: pointer;
-        opacity: 1;
-      }
+      @include desktopHover;
     }
     .advanced-item {
       width: 100%;
       height: auto;
       opacity: 0.5;
-      &:hover {
-        cursor: pointer;
-        opacity: 1;
-      }
+      @include desktopHover;
     }
   }
 
@@ -313,6 +313,7 @@ export default {
     width: initial;
     .container {
       flex-direction: column;
+      align-items: center;
     }
     .champ-container, .item-container {
       max-width: 90vw;
