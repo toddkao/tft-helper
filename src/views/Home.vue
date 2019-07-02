@@ -13,25 +13,40 @@
       />
     </div>
     <div class="item-container" :style="{
-      'grid-template-columns': `repeat(${itemWidth}, 1fr)`
+      'grid-template-columns': `repeat(${itemWidth + 1}, 1fr)`
     }" >
-      <template v-for="item in items">
+      <div class="item-column" style="justify-content: flex-end">
         <img
-          class="champ"
-          :class="{'selected': selected[item.name] === true }"
+          v-for="item in items"
+          class="item"
           :key="item.key"
           :src="item.image"
-          @click="toggle(item.key)"
+          :class="{'selected-column': selected[item.name] === true }"
+          @click="toggle(item.name)"
+        />
+      </div>
+
+      <div
+        class="item-column"
+        v-for="item in items"
+        :key="item.key"
+        :class="{'selected-column': selected[item.name] === true }"
+      >
+        <img
+          class="item"
+          :class="{'selected': selected[item.name] === true }"
+          :src="item.image"
+          @click="toggle(item.name)"
         />
         <img
-          class="champ"
+          class="advanced-item"
           :class="{'selected': selected[nextItem.name] === true }"
           v-for="nextItem in item.buildsInto"
           :src="nextItem.image"
           :key="nextItem.name"
           @click="toggle(nextItem.name)"
         />
-      </template>
+      </div>
     </div>
   </div>
 </template>
@@ -107,8 +122,7 @@ export default {
   width: 100vw;
   .champ-container {
     display: grid;
-    max-width: 80vmin;
-    max-height: 80vmin;
+    max-width: 50vmin;
     .champ {
       width: 100%;
       height: auto;
@@ -124,9 +138,26 @@ export default {
   }
   .item-container {
     display: grid;
-    max-width: 80vmin;
-    max-height: 80vmin;
-    .champ {
+    max-width: 50vmin;
+    .item-column {
+      display: flex;
+      flex-direction: column;
+    }
+    .selected-column {
+      outline: 2px solid black;
+    }
+    .item {
+      width: 100%;
+      height: auto;
+      &.selected {
+        opacity: 1;
+      }
+      &:hover {
+        cursor: pointer;
+        opacity: 1;
+      }
+    }
+    .advanced-item {
       width: 100%;
       height: auto;
       opacity: 0.5;
