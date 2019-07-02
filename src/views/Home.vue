@@ -256,7 +256,7 @@ export default {
       width: 100%;
       height: auto;
       opacity: 0.5;
-      @include desktopHover;
+      @include desktopHover();
     }
   }
   .item-container {
@@ -272,13 +272,13 @@ export default {
     .item {
       width: 100%;
       height: auto;
-      @include desktopHover;
+      @include desktopHover();
     }
     .advanced-item {
       width: 100%;
       height: auto;
       opacity: 0.5;
-      @include desktopHover;
+      @include desktopHover();
     }
   }
 
