@@ -234,7 +234,7 @@ export default {
 .page {
   user-select: none;
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   height: 100vh;
   width: 100vw;
@@ -285,6 +285,8 @@ export default {
   .type-container, .origin-container {
     margin: 50px;
     text-align: left;
+    max-height: 30vmin;
+    overflow: auto;
   }
 
   .reached {
