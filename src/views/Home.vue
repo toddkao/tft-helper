@@ -54,7 +54,7 @@
         <div v-for="(amount, type) in potentialClasses" :key="type">
           <span> {{ type }} {{ amount }} </span>
           <span
-            v-for="tier in classes[type.toLowerCase()].bonuses"
+            v-for="tier in classBonuses(type)"
             :class="{'reached': amount >= tier.needed}"
             :key="tier.effect">
             ({{ tier.needed }})
@@ -67,7 +67,7 @@
         <div v-for="(amount, origin) in potentialOrigins" :key="origin">
           <span> {{ origin }} {{ amount }} </span>
           <span
-            v-for="tier in origins[origin.toLowerCase()].bonuses"
+            v-for="tier in originBonuses(origin)"
             :class="{'reached': amount >= tier.needed}"
             :key="tier.effect">
             ({{ tier.needed }})
@@ -96,7 +96,7 @@ export default {
       origins: {},
     }
   },
-  mounted () {
+  async mounted () {
     this.getChamps();
     this.getItems();
     this.getClasses();
@@ -213,6 +213,18 @@ export default {
     async getOrigins () {
       const response = await tft.origins();
       this.origins = response.data;
+    },
+    classBonuses (type) {
+      if (this.classes[type.toLowerCase()]) {
+        return this.classes[type.toLowerCase()].bonuses;
+      }
+      return [];
+    },
+    originBonuses (origin) {
+      if (this.origins[origin.toLowerCase()]) {
+        return this.origins[origin.toLowerCase()].bonuses
+      }
+      return [];
     }
   }
 };
