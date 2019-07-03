@@ -6,10 +6,10 @@
         <img
           class="champ"
           :class="[
-            {'selected': selected[champ.key] === true},
-            {'filteredType': matchesChampFilter[champ.key] === 'type'},
-            {'filteredOrigin': matchesChampFilter[champ.key] === 'origin'},
-            {'filteredBoth': matchesChampFilter[champ.key] === 'both'}
+            {'selected': selected[champ.key] === true || matchesGenericFilter[champ.key.toLowerCase()]},
+            {'filteredType': matchesChampFilter[champ.key.toLowerCase()] === 'type'},
+            {'filteredOrigin': matchesChampFilter[champ.key.toLowerCase()] === 'origin'},
+            {'filteredBoth': matchesChampFilter[champ.key.toLowerCase()] === 'both'}
           ]"
           v-for="champ in champs"
           :key="champ.key"
@@ -27,7 +27,10 @@
             class="item"
             :key="`y-axis-${item.key}`"
             :src="item.image"
-            :class="{'selected-column': selected[item.name] === true }"
+            :class="[
+              {'selected': matchesGenericFilter[item.key.toLowerCase()]},
+              {'selected-column': selected[item.name] === true }
+            ]"
             @click="toggle(item.name)"
           />
         </div>
@@ -36,17 +39,20 @@
           class="item-column"
           v-for="item in sortedItems"
           :key="`row-${item.key}`"
-          :class="{'selected-column': selected[item.name] === true }"
+          :class="[
+            {'selected': matchesGenericFilter[item.key.toLowerCase()]},
+            {'selected-column': selected[item.name] === true }
+          ]"
         >
           <img
             class="item"
-            :class="{'selected': selected[item.name] === true }"
+            :class="{'selected': selected[item.name] === true || matchesGenericFilter[item.key.toLowerCase()]}"
             :src="item.image"
             @click="toggle(item.name)"
           />
           <img
             class="advanced-item"
-            :class="{'selected': selected[nextItem.name] === true }"
+            :class="{'selected': selected[nextItem.name] === true || matchesGenericFilter[nextItem.name.toLowerCase()]}"
             v-for="(nextItem, index) in item.buildsInto"
             :src="nextItem.image"
             :key="`adv-item-${nextItem.name}-${index}`"
@@ -59,8 +65,15 @@
       <div>
         Filtering by:
       </div>
-      <div>
+      <div v-if="champFilter">
+        <div> Class/Origin </div>
         {{ champFilter }}
+      </div>
+      <div v-if="genericFilter !== ''">
+        <div> Champ/Class/Origin/Item </div>
+        <div>
+          {{ genericFilter }}
+        </div>
       </div>
     </div>
     <div class="container">
@@ -105,6 +118,7 @@
 <script>
 import tft from '@/api/tft';
 import riot from '@/api/riot';
+import { clearInterval, setInterval } from 'timers';
 
 export default {
   name: 'home',
@@ -114,10 +128,12 @@ export default {
       champWidth: 1,
       selected: {},
       items: [],
+      allItems: [],
       itemWidth: 1,
       classes: {},
       origins: {},
       champFilter: undefined,
+      genericFilter: '',
     }
   },
   async mounted () {
@@ -125,6 +141,7 @@ export default {
     this.getItems();
     this.getClasses();
     this.getOrigins();
+    this.initKeyboardEventListener();
   },
   computed: {
     potentialClasses () {
@@ -191,19 +208,49 @@ export default {
       this.$forceUpdate();
       return sorted;
     },
+    matchesGenericFilter () {
+      let matches = {};
+      this.allItems.forEach(item => {
+        if (this.genericFilter && this.genericFilter.length > 1) {
+          console.log(item.key, item.name)
+          const matchesKey = item.key.toLowerCase().startsWith(this.genericFilter.toLowerCase())
+          const matchesName = item.name.toLowerCase().startsWith(this.genericFilter.toLowerCase())
+          if (matchesKey) {
+            matches[item.key.toLowerCase()] = true
+          }
+          if (matchesName) {
+            matches[item.name.toLowerCase()] = true
+          }
+        }
+      })
+
+      Object.keys(this.champs).forEach(key => {
+        const champ = this.champs[key];
+        if (this.genericFilter) {
+          const matchesOrigin = champ.origin.some(origin => origin.toLowerCase().startsWith(this.genericFilter.toLowerCase()));
+          const matchesType = champ.class.some(type => type.toLowerCase().startsWith(this.genericFilter.toLowerCase()));
+          const matchesName = champ.name.toLowerCase().startsWith(this.genericFilter.toLowerCase());
+          if (matchesType ||matchesOrigin || matchesName) {
+            matches[champ.key.toLowerCase()] = true
+          }
+        }
+      })
+
+      return matches;
+    },
     matchesChampFilter () {
       let matches = {};
       Object.keys(this.champs).forEach(key => {
         const champ = this.champs[key];
         if (this.champFilter) {
-          const matchesOrigin = champ.origin.some(origin => this.champFilter.includes(origin));
-          const matchesType = champ.class.some(type => this.champFilter.includes(type));
+          const matchesOrigin = champ.origin.some(origin => this.champFilter.includes(origin))
+          const matchesType = champ.class.some(type => this.champFilter.includes(type))
           if (matchesType && matchesOrigin) {
-            matches[champ.key] = 'both'
+            matches[champ.key.toLowerCase()] = 'both'
           } else if (matchesType) {
-            matches[champ.key] = 'type'
+            matches[champ.key.toLowerCase()] = 'type'
           } else if (matchesOrigin) {
-            matches[champ.key] = 'origin'
+            matches[champ.key.toLowerCase()] = 'origin'
           }
         }
       })
@@ -247,6 +294,7 @@ export default {
           })
           this.items.push(item);
         }
+        this.allItems.push(item);
       });
       this.itemWidth = this.items.length;
     },
@@ -275,6 +323,19 @@ export default {
     },
     clearChampFilter () {
       this.champFilter = undefined;
+    },
+    initKeyboardEventListener () {
+      window.addEventListener("keydown", e => {
+        const alphanumeric = /[a-zA-Z0-9-_ ]/;
+        const str = String.fromCharCode(e.keyCode);
+        if (e.keyCode === 8) {
+          this.genericFilter = this.genericFilter.slice(0, this.genericFilter.length - 1)
+        } else if (e.keyCode === 27) {
+          this.genericFilter = '';
+        } else if (alphanumeric.test(str)) {
+          this.genericFilter += e.key;
+        }
+      });
     }
   }
 };
