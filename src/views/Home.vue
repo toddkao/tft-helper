@@ -63,8 +63,8 @@
     </div>
     <div class="filter-container">
       <select v-model="theme">
-        <option value="light"> Light mode</option>
         <option value="dark"> Dark Mode </option>
+        <option value="light"> Light mode</option>
       </select>
       <div>
         Filtering by:
