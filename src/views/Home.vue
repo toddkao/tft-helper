@@ -188,7 +188,6 @@ export default {
     },
     sortedItems () {
       const order = this.items.map(x => x.key)
-      console.log(order)
       let sorted = this.items.map(item => {
         let ordered = [];
         order.forEach(orderItem => {
@@ -204,7 +203,6 @@ export default {
         item.buildsInto = ordered;
         return item;
       })
-      console.log(sorted);
       this.$forceUpdate();
       return sorted;
     },
@@ -212,7 +210,6 @@ export default {
       let matches = {};
       this.allItems.forEach(item => {
         if (this.genericFilter && this.genericFilter.length > 1) {
-          console.log(item.key, item.name)
           const matchesKey = item.key.toLowerCase().startsWith(this.genericFilter.toLowerCase())
           const matchesName = item.name.toLowerCase().startsWith(this.genericFilter.toLowerCase())
           if (matchesKey) {
