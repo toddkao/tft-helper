@@ -5,10 +5,17 @@
         'grid-template-columns': `repeat(${champWidth}, 1fr)`}" >
         <img
           class="champ"
-          :class="{'selected': selected[champ.key] === true }"
+          :class="[
+            {'selected': selected[champ.key] === true},
+            {'filteredType': matchesChampFilter[champ.key] === 'type'},
+            {'filteredOrigin': matchesChampFilter[champ.key] === 'origin'},
+            {'filteredBoth': matchesChampFilter[champ.key] === 'both'}
+          ]"
           v-for="champ in champs"
           :key="champ.key"
           :src="champ.image"
+          @mouseenter="setChampFilter([...champ.origin, ...champ.class])"
+          @mouseleave="clearChampFilter()"
           @click="toggle(champ.key)"
         />
       </div>
@@ -48,11 +55,23 @@
         </div>
       </div>
     </div>
+    <div class="filter-container">
+      <div>
+        Filtering by:
+      </div>
+      <div>
+        {{ champFilter }}
+      </div>
+    </div>
     <div class="container">
       <div class="type-container">
-        <h1> Classes </h1>
+        <h1 class="class-title"> Classes </h1>
         <div v-for="(amount, type) in potentialClasses" :key="type">
-          <span> {{ type }} {{ amount }} </span>
+          <span
+            @mouseenter="setChampFilter([type])"
+            @mouseleave="clearChampFilter()">
+            {{ type }} {{ amount }}
+          </span>
           <span
             v-for="tier in classBonuses(type)"
             :class="{'reached': amount >= tier.needed}"
@@ -63,9 +82,13 @@
         </div>
       </div>
       <div class="origin-container">
-        <h1> Origins </h1>
+        <h1 class="origin-title"> Origins </h1>
         <div v-for="(amount, origin) in potentialOrigins" :key="origin">
-          <span> {{ origin }} {{ amount }} </span>
+          <span
+            @mouseenter="setChampFilter([origin])"
+            @mouseleave="clearChampFilter()">
+            {{ origin }} {{ amount }}
+          </span>
           <span
             v-for="tier in originBonuses(origin)"
             :class="{'reached': amount >= tier.needed}"
@@ -94,6 +117,7 @@ export default {
       itemWidth: 1,
       classes: {},
       origins: {},
+      champFilter: undefined,
     }
   },
   async mounted () {
@@ -117,11 +141,13 @@ export default {
     potentialOrigins () {
       let origins = {};
       Object.keys(this.selectedChamps).map(champ => {
-        if (!origins[this.champs[champ].origin]) {
-          origins[this.champs[champ].origin] = 1;
-        } else {
-          origins[this.champs[champ].origin] += 1;
-        }
+        this.champs[champ].origin.forEach(origin => {
+          if (!origins[origin]) {
+            origins[origin] = 1;
+          } else {
+            origins[origin] += 1;
+          }
+        })
       })
       return origins;
     },
@@ -164,6 +190,24 @@ export default {
       console.log(sorted);
       this.$forceUpdate();
       return sorted;
+    },
+    matchesChampFilter () {
+      let matches = {};
+      Object.keys(this.champs).forEach(key => {
+        const champ = this.champs[key];
+        if (this.champFilter) {
+          const matchesOrigin = champ.origin.some(origin => this.champFilter.includes(origin));
+          const matchesType = champ.class.some(type => this.champFilter.includes(type));
+          if (matchesType && matchesOrigin) {
+            matches[champ.key] = 'both'
+          } else if (matchesType) {
+            matches[champ.key] = 'type'
+          } else if (matchesOrigin) {
+            matches[champ.key] = 'origin'
+          }
+        }
+      })
+      return matches;
     }
   },
   methods: {
@@ -225,6 +269,12 @@ export default {
         return this.origins[origin.toLowerCase()].bonuses
       }
       return [];
+    },
+    setChampFilter (filter) {
+      this.champFilter = filter;
+    },
+    clearChampFilter () {
+      this.champFilter = undefined;
     }
   }
 };
@@ -249,6 +299,7 @@ export default {
   width: 100vw;
   flex-direction: column;
   .champ-container {
+    margin: 20px;
     display: grid;
     grid-gap: 2px;
     max-width: 50vmin;
@@ -260,6 +311,7 @@ export default {
     }
   }
   .item-container {
+    margin: 20px;
     display: grid;
     max-width: 50vmin;
     .item-column {
@@ -287,6 +339,16 @@ export default {
     text-align: left;
     max-height: 30vmin;
     overflow: auto;
+    .origin-title {
+      color: red;
+    }
+    .class-title {
+      color: blue;
+    }
+  }
+
+  .filter-container {
+    height: 50px;
   }
 
   .reached {
@@ -298,6 +360,24 @@ export default {
     display: flex;
     justify-content: center;
     align-items: flex-start;
+  }
+
+  .filteredType {
+    opacity: 1!important;
+    outline: 4px solid blue;
+    z-index: 2;
+  }
+
+  .filteredOrigin {
+    opacity: 1!important;
+    outline: 4px solid red;
+    z-index: 2;
+  }
+
+  .filteredBoth {
+    opacity: 1!important;
+    outline: 4px solid magenta;
+    z-index: 2;
   }
 
   .selected {
