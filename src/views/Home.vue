@@ -353,11 +353,6 @@ export default {
   }
 }
 
-.dark-theme {
-  background-color: #192438;
-  color: white! important;
-}
-
 .page {
   user-select: none;
   display: flex;
@@ -469,6 +464,18 @@ export default {
     .type-container, .origin-container {
       margin: 50px;
       max-height: initial;
+    }
+  }
+}
+
+.dark-theme {
+  background-color: #192438;
+  color: white! important;
+  &.page {
+    .item-container {
+      .selected-column {
+        background-color: rgba(188, 188, 214, 0.5);
+      }
     }
   }
 }
