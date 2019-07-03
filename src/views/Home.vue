@@ -1,5 +1,5 @@
 <template>
-  <div class="page">
+  <div class="page" :class="{'dark-theme': theme === 'dark'}">
     <div class="container">
       <div class="champ-container" :style="{
         'grid-template-columns': `repeat(${champWidth}, 1fr)`}" >
@@ -62,6 +62,10 @@
       </div>
     </div>
     <div class="filter-container">
+      <select v-model="theme">
+        <option value="light"> Light mode</option>
+        <option value="dark"> Dark Mode </option>
+      </select>
       <div>
         Filtering by:
       </div>
@@ -134,6 +138,7 @@ export default {
       origins: {},
       champFilter: undefined,
       genericFilter: '',
+      theme: 'dark'
     }
   },
   async mounted () {
@@ -346,6 +351,11 @@ export default {
       opacity: 1;
     }
   }
+}
+
+.dark-theme {
+  background-color: #192438;
+  color: white! important;
 }
 
 .page {
