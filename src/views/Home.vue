@@ -28,10 +28,9 @@
             :key="`y-axis-${item.key}`"
             :src="item.image"
             :class="[
-              {'selected': matchesGenericFilter[item.key.toLowerCase()]},
-              {'selected-column': selected[item.name] === true }
+              {'selected': matchesGenericFilter[item.key.toLowerCase()] || selectedSecondItem[item.name] === true },
             ]"
-            @click="toggle(item.name)"
+            @click="toggleSecondItem(item.name)"
           />
         </div>
 
@@ -52,7 +51,10 @@
           />
           <img
             class="advanced-item"
-            :class="{'selected': selected[nextItem.name] === true || matchesGenericFilter[nextItem.name.toLowerCase()]}"
+            :class="[
+              {'selected': selected[nextItem.name] || matchesGenericFilter[nextItem.name.toLowerCase()]},
+              {'canBuild': potentialItems[nextItem.name]},
+            ]"
             v-for="(nextItem, index) in item.buildsInto"
             :src="nextItem.image"
             :key="`adv-item-${nextItem.name}-${index}`"
@@ -62,16 +64,41 @@
       </div>
     </div>
     <div class="filter-container">
-      <select v-model="theme">
+      <!-- <select v-model="theme">
         <option value="dark"> Dark Mode </option>
         <option value="light"> Light mode</option>
-      </select>
+      </select> -->
+      <div class="flex">
+        <div
+          v-for="champ in champs"
+          v-if="selected[champ.key] === true"
+          :key="`owned-${champ.key}`"
+        >
+          <div class="flex">
+            <img
+              :class="{'canBuild': potentialItems[item]}"
+              v-for="item in champ.items"
+              :key="`owned-suggested-item-${item}`"
+              :src="itemMap[item].image"
+              width="40vmin"
+            />
+          </div>
+          <img
+            class="champ owned-champ"
+            :src="champ.image"
+            width="50vmin"
+            height="50vmin"
+          />
+        </div>
+      </div>
       <div>
         Filtering by:
       </div>
       <div v-if="champFilter">
         <div> Class/Origin </div>
-        {{ champFilter }}
+        <div v-for="type in champFilter">
+          {{ type }}
+        </div>
       </div>
       <div v-if="genericFilter !== ''">
         <div> Champ/Class/Origin/Item </div>
@@ -80,6 +107,7 @@
         </div>
       </div>
     </div>
+
     <div class="container">
       <div class="type-container">
         <h1 class="class-title"> Classes </h1>
@@ -132,13 +160,17 @@ export default {
       champWidth: 1,
       selected: {},
       items: [],
+      advItems: [],
       allItems: [],
       itemWidth: 1,
       classes: {},
       origins: {},
       champFilter: undefined,
       genericFilter: '',
-      theme: 'dark'
+      theme: 'dark',
+      itemKeyMap: {},
+      itemMap: {},
+      selectedSecondItem: {},
     }
   },
   async mounted () {
@@ -182,6 +214,24 @@ export default {
       })
       return clone;
     },
+    potentialItems () {
+      let itemsOwned = Object.keys(this.selectedItems).map(name => this.itemKeyMap[name]);
+      let itemsYouCanBuild = {};
+      this.advItems.forEach(item => {
+        if (item.buildsFrom[0] !== item.buildsFrom[1]) {
+          if (item.buildsFrom.every(item => itemsOwned.includes(item))) {
+            itemsYouCanBuild[item.key] = true;
+          }
+        } else {
+          if (item.buildsFrom.every(item => itemsOwned.includes(item))
+            && this.selectedSecondItem[this.itemMap[item.buildsFrom[0]].name] === true
+            ) {
+            itemsYouCanBuild[item.key] = true;
+          }
+        }
+      })
+      return itemsYouCanBuild;
+    },
     selectedChamps () {
       let clone = Object.assign({}, this.selected);
       Object.keys(clone).forEach(key => {
@@ -198,10 +248,10 @@ export default {
         order.forEach(orderItem => {
           let itemName = item.key;
           if (orderItem !== itemName) {
-            let advItem = item.buildsInto.find(x => x.from.includes(orderItem))
+            let advItem = item.buildsInto.find(x => x.buildsFrom.includes(orderItem))
             ordered.push(advItem);
           } else {
-            let advItem = item.buildsInto.find(x => x.from.every((val) => val === orderItem))
+            let advItem = item.buildsInto.find(x => x.buildsFrom.every((val) => val === orderItem))
             ordered.push(advItem);
           }
         })
@@ -267,6 +317,13 @@ export default {
         this.$set(this.selected, key, true);
       }
     },
+    toggleSecondItem(key) {
+      if (this.selectedSecondItem[key]) {
+        this.$delete(this.selectedSecondItem, key);
+      } else {
+        this.$set(this.selectedSecondItem, key, true);
+      }
+    },
     async getChamps () {
       const response = await tft.champs();
       this.champs = response.data;
@@ -281,20 +338,25 @@ export default {
     async getItems () {
       const response = await tft.items();
       const items = response.data;
-
+      this.itemMap = items;
       const itemKeys = Object.keys(items);
       itemKeys.forEach((key) => {
         const item = items[key];
+        this.itemKeyMap[item.name] = item.key;
+        this.itemMap[key].image = `https://solomid-resources.s3.amazonaws.com/blitz/tft/items/${key}.png`;
         if (item.buildsInto) {
           item.image = `https://solomid-resources.s3.amazonaws.com/blitz/tft/items/${key}.png`;
-          item.buildsInto = item.buildsInto.map(item => {
+          item.buildsInto = item.buildsInto.map(advItemKey => {
             return {
-              name: item,
-              from: items[item].buildsFrom,
-              image: `https://solomid-resources.s3.amazonaws.com/blitz/tft/items/${item}.png`,
+              name: advItemKey,
+              key: advItemKey,
+              buildsFrom: items[advItemKey].buildsFrom,
+              image: `https://solomid-resources.s3.amazonaws.com/blitz/tft/items/${advItemKey}.png`,
             }
           })
           this.items.push(item);
+        } else {
+          this.advItems.push(item);
         }
         this.allItems.push(item);
       });
@@ -351,6 +413,10 @@ export default {
       opacity: 1;
     }
   }
+}
+
+.flex {
+  display: flex;
 }
 
 .page {
@@ -446,6 +512,18 @@ export default {
   .selected {
     opacity: 1!important;
     outline: 4px solid yellow;
+    z-index: 2;
+  }
+
+  .canBuild {
+    opacity: 1!important;
+    outline: 4px solid lightgreen;
+    z-index: 2;
+  }
+
+  .duplicate {
+    opacity: 0.5!important;
+    outline: 2px solid lightblue;
     z-index: 2;
   }
 }
