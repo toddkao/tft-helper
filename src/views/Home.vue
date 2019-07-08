@@ -115,7 +115,7 @@
           <span
             @mouseenter="setChampFilter([type])"
             @mouseleave="clearChampFilter()">
-            {{ type }} {{ amount }}
+            {{ type }} <img :src="`https://d1v0ze4r2jabid.cloudfront.net/icons/${type.toLowerCase()}.png`" /> {{ amount }}
           </span>
           <span
             v-for="tier in classBonuses(type)"
@@ -132,7 +132,7 @@
           <span
             @mouseenter="setChampFilter([origin])"
             @mouseleave="clearChampFilter()">
-            {{ origin }} {{ amount }}
+            {{ origin }} <img :src="`https://d1v0ze4r2jabid.cloudfront.net/icons/${origin.toLowerCase()}.png`" /> {{ amount }}
           </span>
           <span
             v-for="tier in originBonuses(origin)"
@@ -424,8 +424,7 @@ export default {
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  height: 100vh;
-  width: 100vw;
+  min-height: 100vh;
   flex-direction: column;
   .champ-container {
     margin: 20px;
